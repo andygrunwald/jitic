@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"github.com/andygrunwald/jitic/jira"
 	"log"
@@ -11,10 +12,11 @@ import (
 
 func main() {
 	var (
-		jiraURL       = flag.String("url", "", "JIRA instance URL")
-		jiraUsername  = flag.String("user", "", "JIRA Username")
-		jiraPassword  = flag.String("pass", "", "JIRA Password")
-		ticketMessage = flag.String("tickets", "", "Message to retrieve the tickets from")
+		jiraURL       = flag.String("url", "", "JIRA instance URL.")
+		jiraUsername  = flag.String("user", "", "JIRA Username.")
+		jiraPassword  = flag.String("pass", "", "JIRA Password.")
+		ticketMessage = flag.String("tickets", "", "Message to retrieve the tickets from.")
+		inputStdin    = flag.Bool("stdin", false, "Set to true if you want to get \"-tickets\" from stdin instead of an argument.")
 	)
 	flag.Parse()
 
@@ -25,7 +27,7 @@ func main() {
 	}
 
 	// If we don`t get any ticket, we will just exit here.
-	if len(tickets) == 0 {
+	if *inputStdin == false && len(tickets) == 0 {
 		log.Fatal("No JIRA-Ticket(s) found.")
 	}
 
@@ -38,14 +40,28 @@ func main() {
 
 	session := jira.AuthAgainstJIRA(parsedURL, jiraUsername, jiraPassword)
 
+	if *inputStdin == false {
+		ticketLoop(tickets, parsedURL, session)
+	}
+
+	if *inputStdin {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			tickets := getTicketsOutOfMessage(scanner.Text())
+			ticketLoop(tickets, parsedURL, session)
+		}
+	}
+
+	os.Exit(0)
+}
+
+func ticketLoop(tickets []string, parsedURL *url.URL, session *jira.Session) {
 	for _, ticket := range tickets {
 		_, errors := jira.GetTicket(ticket, parsedURL, session)
 		if errors != nil {
 			log.Fatal(errors)
 		}
 	}
-
-	os.Exit(0)
 }
 
 // getTicketsOutOfMessage will retrieve all JIRA ticket numbers out of a text.
