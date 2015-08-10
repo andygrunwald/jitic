@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"strings"
 )
 
 func main() {
@@ -15,8 +14,7 @@ func main() {
 		jiraURL       = flag.String("url", "", "JIRA instance URL")
 		jiraUsername  = flag.String("user", "", "JIRA Username")
 		jiraPassword  = flag.String("pass", "", "JIRA Password")
-		ticketKeys    = flag.String("tickets", "", "JIRA Ticket(s). Separated by comma")
-		ticketMessage = flag.String("ticket-message", "", "Message to find a ticket")
+		ticketMessage = flag.String("tickets", "", "Message to retrieve the tickets from")
 	)
 	flag.Parse()
 
@@ -24,9 +22,6 @@ func main() {
 	var tickets []string
 	if len(*ticketMessage) > 0 {
 		tickets = getTicketsOutOfMessage(*ticketMessage)
-	}
-	if len(*ticketKeys) > 0 {
-		tickets = append(tickets, strings.Split(*ticketKeys, ",")...)
 	}
 
 	// If we don`t get any ticket, we will just exit here.
