@@ -4,7 +4,29 @@
 
 ## Usage
 
-TODO
+```
+Usage of ./jitic:
+  -pass="": JIRA Password.
+  -stdin=false: Set to true if you want to get "-tickets" from stdin instead of an argument.
+  -tickets="": Message to retrieve the tickets from.
+  -url="": JIRA instance URL.
+  -user="": JIRA Username.
+  -version=false: Outputs the version number and exits.
+```
+
+### Examples
+
+Check if ticket *WEB-22861* exists in *https://jira.example.org/* from parameter.
+
+```bash
+./jitic -url="https://jira.example.org/" -user="JIRA-API" -pass="SECRET-PASSWORD" -tickets="This is my commit message for this awesome feature: WEB-22861 remove authentication prod build for now"
+```
+
+Check if ticket *WEB-22861* exists in *https://jira.example.org/* from stdin.
+
+```bash
+echo "This is my commit message for this awesome feature: WEB-22861 remove authentication prod build for now" | ./jitic -url="https://jira.example.org/" -user="JIRA-API" -pass="SECRET-PASSWORD" -stdin
+```
 
 ## Use cases
 
@@ -40,7 +62,7 @@ exit 0
 
 ### Git "pre-receive" hook
 
-See [Customizing Git - Git Hooks](https://git-scm.com/book/it/v2/Customizing-Git-Git-Hooks).
+See [Customizing Git - Git Hooks](https://git-scm.com/book/it/v2/Customizing-Git-Git-Hooks) and [A reasonable git pre-receive-hook](https://gist.github.com/caniszczyk/1327469).
 
 How a pre-receive hook can look like:
 ```sh

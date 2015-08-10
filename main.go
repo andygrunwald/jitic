@@ -3,11 +3,18 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"github.com/andygrunwald/jitic/jira"
 	"log"
 	"net/url"
 	"os"
 	"regexp"
+)
+
+const (
+	majorVersion = 0
+	minorVersion = 0
+	patchVersion = 1
 )
 
 func main() {
@@ -17,8 +24,15 @@ func main() {
 		jiraPassword  = flag.String("pass", "", "JIRA Password.")
 		ticketMessage = flag.String("tickets", "", "Message to retrieve the tickets from.")
 		inputStdin    = flag.Bool("stdin", false, "Set to true if you want to get \"-tickets\" from stdin instead of an argument.")
+		flagVersion   = flag.Bool("version", false, "Outputs the version number and exits.")
 	)
 	flag.Parse()
+
+	// Output the version and exit
+	if *flagVersion {
+		fmt.Printf("jitic v%d.%d.%d\n", majorVersion, minorVersion, patchVersion)
+		return
+	}
 
 	// Collect all ticket keys
 	var tickets []string
