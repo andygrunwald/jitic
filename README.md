@@ -54,15 +54,18 @@ JIRA_PASSWORD="SECRET-PASSWORD"
 set -e
 
 # Auth against JIRA and check if the ticket(s) exists
-$JITIC -url="$JIRA_URL" -user="$JIRA_USERNAME" -pass="$JIRA_PASSWORD" -ticket-message="$COMMIT_MSG"
+$JITIC -url="$JIRA_URL" -user="$JIRA_USERNAME" -pass="$JIRA_PASSWORD" -tickets="$COMMIT_MSG"
 
 # All checks passed, so allow the commit.
 exit 0
 ```
 
+**Pro-Tip**: Set the variables *JIRA_USERNAME* and *JIRA_PASSWORD* in a seperate file and import this file via [*source*](http://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x237.html) into the hook.
+With this you can store the pre-commit hook itself in git + deploy it with configuration management.
+
 ### Git "pre-receive" hook
 
-See [Customizing Git - Git Hooks](https://git-scm.com/book/it/v2/Customizing-Git-Git-Hooks) and [A reasonable git pre-receive-hook](https://gist.github.com/caniszczyk/1327469).
+See [Customizing Git - Git Hooks](https://git-scm.com/book/it/v2/Customizing-Git-Git-Hooks) and [A reasonable git pre-receive-hook](https://gist.github.com/caniszczyk/1327469) and [Can git pre-receive hooks evaulate the incoming commit?](http://stackoverflow.com/questions/22546393/can-git-pre-receive-hooks-evaulate-the-incoming-commit).
 
 How a pre-receive hook can look like:
 ```sh
