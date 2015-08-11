@@ -71,7 +71,88 @@ How a pre-receive hook can look like:
 ```sh
 #!/bin/sh
 
+GIT=/usr/local/bin/git
+JITIC=/usr/bin/jitic
+JIRA_URL="https://jira.example.org/"
+JIRA_USERNAME="JIRA-API"
+JIRA_PASSWORD="SECRET-PASSWORD"
 
+FAIL=""
+
+validate_ref()
+{
+	# Arguments
+	oldrev=$($GIT rev-parse $1)
+	newrev=$($GIT rev-parse $2)
+	refname="$3"
+
+	# $oldrev / $newrev are commit hashes (sha1) of git
+	# $refname is the full name of branch (refs/heads/*) or tag (refs/tags/*)
+	# $oldrev could be 0s which means creating $refname
+	# $newrev could be 0s which means deleting $refname
+
+	case "$refname" in
+		refs/heads/*)
+			# We currently only care about updating branches.
+			# If you want to take care for deleting branched check this:
+			#   if [ 0 -ne $(expr "$newrev" : "0*$") ]; then
+			#       # Your code here
+			#   fi
+
+			# Pushing a new branch
+			if [ 0 -ne $(expr "$oldrev" : "0*$") ]; then
+				COMMITS_TO_CHECK=$($GIT rev-list $newrev --not --branches=*)
+
+			# Updating an existing branch
+			else
+				COMMITS_TO_CHECK=$($GIT rev-list $oldrev..$newrev)
+			fi
+
+			# If we push an new, but empty branch we can exit early.
+			# In this case there are no commits to check.
+			if [ -z "$COMMITS_TO_CHECK" ]; then
+				return
+			fi
+
+			# Get all commits, loop over and check if there are valid JIRA tickets
+			while read REVISION ; do
+				COMMIT_MESSAGE=$($GIT log --pretty=format:"%B" -n 1 $REVISION)
+
+				$JITIC -url="$JIRA_URL" -user="$JIRA_USERNAME" -pass="$JIRA_PASSWORD" -tickets="$COMMIT_MESSAGE"
+				if [ $? != 0 ]; then
+					FAIL=1
+					echo >&2 "... in revision $REVISION"
+				fi
+			done <<< "$COMMITS_TO_CHECK"
+
+			return
+			;;
+		refs/tags/*)
+			# Support for tags (new / delete) needs to be done.
+			# Things we need to check:
+			#   * Get all commits from the new tag that are NOT checked yet
+			#     (checked means by jitic). Something like commits which are
+			#     not pushed yet, but the tag was pushed.
+			# I think we don`t need to care about deleted branches yet.
+			;;
+		*)
+			FAIL=1
+			echo >&2 ""
+			echo >&2 "*** pre-receive hook does not understand ref $refname in this repository. ***"
+			echo >&2 "*** Contact the repository administrator. ***"
+			echo >&2 ""
+			;;
+	esac
+}
+
+while read OLD_REVISION NEW_REVISION REFNAME
+do
+	validate_ref $OLD_REVISION $NEW_REVISION $REFNAME
+done
+
+if [ -n "$FAIL" ]; then
+	exit $FAIL
+fi
 ```
 
 ## License
