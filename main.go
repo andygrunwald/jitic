@@ -7,7 +7,6 @@ import (
 	"github.com/andygrunwald/jitic/jira"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
 	"regexp"
 )
@@ -59,31 +58,34 @@ func main() {
 
 	// TODO Add a check for required parameters
 
-	parsedURL, err := url.Parse(*jiraURL)
+	jiraInstance, err := jira.NewJIRAInstance(*jiraURL, *jiraUsername, *jiraPassword)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	session := jira.AuthAgainstJIRA(parsedURL, jiraUsername, jiraPassword)
+	ok, err := jiraInstance.Authenticate()
+	if ok == false || err != nil {
+		logger.Fatal(err)
+	}
 
 	if *inputStdin == false {
-		ticketLoop(tickets, parsedURL, session)
+		ticketLoop(tickets, jiraInstance)
 	}
 
 	if *inputStdin {
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
 			tickets := getTicketsOutOfMessage(scanner.Text())
-			ticketLoop(tickets, parsedURL, session)
+			ticketLoop(tickets, jiraInstance)
 		}
 	}
 
 	os.Exit(0)
 }
 
-func ticketLoop(tickets []string, parsedURL *url.URL, session *jira.Session) {
+func ticketLoop(tickets []string, jiraInstance *jira.JIRA) {
 	for _, ticket := range tickets {
-		_, errors := jira.GetTicket(ticket, parsedURL, session)
+		_, errors := jiraInstance.GetTicket(ticket)
 		if errors != nil {
 			log.Fatal(errors)
 		}

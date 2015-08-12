@@ -10,14 +10,37 @@ import (
 	"net/url"
 )
 
-func GetTicket(ticketKey string, parsedURL *url.URL, session *Session) (*Ticket, *Errors) {
-	parsedURL.Path = "rest/api/latest/issue/" + ticketKey + ".json"
+type JIRA struct {
+	parsedURL *url.URL
+	session   *Session
+	username  string
+	password  string
+}
 
-	req, err := http.NewRequest("GET", parsedURL.String(), nil)
+func NewJIRAInstance(address, username, password string) (*JIRA, error) {
+	parsedURL, err := url.Parse(address)
+	if err != nil {
+		return nil, err
+	}
+
+	instance := &JIRA{
+		parsedURL: parsedURL,
+		session:   nil,
+		username:  username,
+		password:  password,
+	}
+
+	return instance, nil
+}
+
+func (j *JIRA) GetTicket(ticketKey string) (*Ticket, *Errors) {
+	j.parsedURL.Path = "rest/api/latest/issue/" + ticketKey + ".json"
+
+	req, err := http.NewRequest("GET", j.parsedURL.String(), nil)
 	if err != nil {
 		log.Fatal("Can`t build GET / Ticket request", err)
 	}
-	req.Header.Set("Cookie", fmt.Sprintf("%s=%s", session.Session.Name, session.Session.Value))
+	req.Header.Set("Cookie", fmt.Sprintf("%s=%s", j.session.Session.Name, j.session.Session.Value))
 	resp, body, err := sendRequest(req)
 
 	if resp.StatusCode != 200 {
@@ -39,32 +62,39 @@ func GetTicket(ticketKey string, parsedURL *url.URL, session *Session) (*Ticket,
 	return &ticket, nil
 }
 
-func AuthAgainstJIRA(parsedURL *url.URL, username, password *string) *Session {
-	req := buildAuthRequest(parsedURL, username, password)
-	resp, body, err := sendRequest(req)
-	if resp.StatusCode != 200 {
-		log.Fatal("Auth at JIRA instance failed.")
+func (j *JIRA) Authenticate() (bool, error) {
+	req, err := j.buildAuthRequest()
+	if err != nil {
+		return false, err
 	}
+
+	resp, body, err := sendRequest(req)
+	if resp.StatusCode != 200 || err != nil {
+		return false, fmt.Errorf("Auth at JIRA instance failed (HTTP(S) request). %s", err)
+	}
+
 	var session Session
 	err = json.Unmarshal(body, &session)
 	if err != nil {
-		log.Fatal("Auth at JIRA instance failed.", err)
+		return false, fmt.Errorf("Auth at JIRA instance failed (Reading response). %s", err)
 	}
 
-	return &session
+	j.session = &session
+
+	return true, nil
 }
 
 // @link https://docs.atlassian.com/jira/REST/latest/#d2e5888
-func buildAuthRequest(parsedURL *url.URL, username, password *string) *http.Request {
-	parsedURL.Path = "/rest/auth/1/session"
-	var jsonStr = []byte(`{"username":"` + *username + `", "password":"` + *password + `"}`)
-	req, err := http.NewRequest("POST", parsedURL.String(), bytes.NewBuffer(jsonStr))
+func (j *JIRA) buildAuthRequest() (*http.Request, error) {
+	j.parsedURL.Path = "/rest/auth/1/session"
+	var jsonStr = []byte(`{"username":"` + j.username + `", "password":"` + j.password + `"}`)
+	req, err := http.NewRequest("POST", j.parsedURL.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
-		log.Fatal("Can`t build Auth request", err)
+		return nil, fmt.Errorf("Can`t build Auth request. %s", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	return req
+	return req, nil
 }
 
 func sendRequest(req *http.Request) (*http.Response, []byte, error) {
