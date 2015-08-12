@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type JIRA struct {
@@ -33,30 +33,31 @@ func NewJIRAInstance(address, username, password string) (*JIRA, error) {
 	return instance, nil
 }
 
-func (j *JIRA) GetTicket(ticketKey string) (*Ticket, *Errors) {
+func (j *JIRA) GetTicket(ticketKey string) (*Ticket, error) {
 	j.parsedURL.Path = "rest/api/latest/issue/" + ticketKey + ".json"
 
 	req, err := http.NewRequest("GET", j.parsedURL.String(), nil)
 	if err != nil {
-		log.Fatal("Can`t build GET / Ticket request", err)
+		return nil, fmt.Errorf("Can`t build GET / Ticket request. %s", err)
 	}
 	req.Header.Set("Cookie", fmt.Sprintf("%s=%s", j.session.Session.Name, j.session.Session.Value))
 	resp, body, err := sendRequest(req)
 
 	if resp.StatusCode != 200 {
 		var errors Errors
+
 		err = json.Unmarshal(body, &errors)
 		if err != nil {
-			log.Fatal("Parsing of error information (during a ticket request) failed.", err)
+			return nil, fmt.Errorf("Parsing of error information (during a ticket request) failed. %s", err)
 		}
 
-		return nil, &errors
+		return nil, fmt.Errorf("%s", strings.Join(errors.ErrorMessages, " | "))
 	}
 
 	var ticket Ticket
 	err = json.Unmarshal(body, &ticket)
 	if err != nil {
-		log.Fatal("Parsing of Ticket information failed.", err)
+		return nil, fmt.Errorf("Parsing of Ticket information failed. %s", err)
 	}
 
 	return &ticket, nil

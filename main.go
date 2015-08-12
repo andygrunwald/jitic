@@ -89,9 +89,9 @@ func main() {
 
 func ticketLoop(tickets []string, jiraInstance *jira.JIRA) {
 	for _, ticket := range tickets {
-		_, errors := jiraInstance.GetTicket(ticket)
-		if errors != nil {
-			logger.Fatal(errors)
+		_, err := jiraInstance.GetTicket(ticket)
+		if err != nil {
+			logger.Fatal(err)
 		}
 	}
 }
