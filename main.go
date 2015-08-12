@@ -23,7 +23,7 @@ var (
 
 func main() {
 	var (
-		jiraURL       = flag.String("url", "", "JIRA instance URL.")
+		jiraURL       = flag.String("url", "", "JIRA instance URL (format: scheme://[username[:password]@]host[:port]/).")
 		jiraUsername  = flag.String("user", "", "JIRA Username.")
 		jiraPassword  = flag.String("pass", "", "JIRA Password.")
 		ticketMessage = flag.String("tickets", "", "Message to retrieve the tickets from.")
