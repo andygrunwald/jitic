@@ -7,9 +7,9 @@
 ```
 Usage of ./jitic:
   -pass="": JIRA Password.
-  -stdin=false: Set to true if you want to get "-tickets" from stdin instead of an argument.
+  -stdin=false: If set to true you can stream "-tickets" to stdin instead of an argument. If set "-tickets" will be ignored.
   -tickets="": Message to retrieve the tickets from.
-  -url="": JIRA instance URL.
+  -url="": JIRA instance URL (format: scheme://[username[:password]@]host[:port]/).
   -user="": JIRA Username.
   -verbose=false: If activated more information will be written to stdout .
   -version=false: Outputs the version number and exits.
