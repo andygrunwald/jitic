@@ -76,6 +76,10 @@ func main() {
 		scanner := bufio.NewScanner(os.Stdin)
 		for scanner.Scan() {
 			tickets := getTicketsOutOfMessage(scanner.Text())
+			// If no ticket can be found
+			if len(tickets) == 0 {
+				logger.Fatal("No JIRA-Ticket(s) found.")
+			}
 			ticketLoop(tickets, jiraInstance)
 		}
 	}
