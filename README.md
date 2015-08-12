@@ -19,13 +19,13 @@ Usage of ./jitic:
 Check if ticket *WEB-22861* exists in *https://jira.example.org/* from parameter.
 
 ```bash
-./jitic -url="https://jira.example.org/" -user="JIRA-API" -pass="SECRET-PASSWORD" -tickets="This is my commit message for this awesome feature: WEB-22861 remove authentication prod build for now"
+./jitic -url="https://jira.example.org/" -user="JIRA-API" -pass="SECRET-PASSWORD" -tickets="WEB-22861 remove authentication prod build for now"
 ```
 
 Check if ticket *WEB-22861* exists in *https://jira.example.org/* from stdin.
 
 ```bash
-echo "This is my commit message for this awesome feature: WEB-22861 remove authentication prod build for now" | ./jitic -url="https://jira.example.org/" -user="JIRA-API" -pass="SECRET-PASSWORD" -stdin
+echo "WEB-22861 remove authentication prod build for now" | ./jitic -url="https://jira.example.org/" -user="JIRA-API" -pass="SECRET-PASSWORD" -stdin
 ```
 
 ## Use cases
@@ -154,6 +154,9 @@ if [ -n "$FAIL" ]; then
 	exit $FAIL
 fi
 ```
+
+**Pro-Tip**: Set the variables *JIRA_USERNAME* and *JIRA_PASSWORD* in a seperate file and import this file via [*source*](http://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x237.html) into the hook.
+With this you can store the pre-commit hook itself in git + deploy it with configuration management.
 
 ## License
 
