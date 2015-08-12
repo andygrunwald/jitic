@@ -2,6 +2,13 @@
 
 *jitic* - the **JI**RA **Ti**cket **C**hecker - checks the existence of one or more ticket in the [JIRA](https://www.atlassian.com/software/jira) issue tracker. If the tickets exists we will shutdown with exit code 0. Otherwise with 1.
 
+1. [Usage](#usage)
+	1. 	[Examples](#examples)
+2. [Use cases](#use-cases)
+	1. [Subversion "pre-commit" hook](#subversion-pre-commit-hook)
+	2. [Git "pre-receive" hook](#git-pre-receive-hook)
+3. [License](#license)
+
 ## Usage
 
 ```
