@@ -101,7 +101,7 @@ func sendRequest(req *http.Request) (*http.Response, []byte, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return nil, make([]byte, 0), err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
