@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/andygrunwald/jitic/jira"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -17,6 +18,10 @@ const (
 	patchVersion = 1
 )
 
+var (
+	logger *log.Logger
+)
+
 func main() {
 	var (
 		jiraURL       = flag.String("url", "", "JIRA instance URL.")
@@ -25,8 +30,15 @@ func main() {
 		ticketMessage = flag.String("tickets", "", "Message to retrieve the tickets from.")
 		inputStdin    = flag.Bool("stdin", false, "Set to true if you want to get \"-tickets\" from stdin instead of an argument.")
 		flagVersion   = flag.Bool("version", false, "Outputs the version number and exits.")
+		flagVerbose   = flag.Bool("verbose", false, "If activated more information will be written to stdout .")
 	)
 	flag.Parse()
+
+	// Set logger (throw messages away)
+	logger = log.New(ioutil.Discard, "", log.LstdFlags)
+	if *flagVerbose {
+		logger = log.New(os.Stdout, "", log.LstdFlags)
+	}
 
 	// Output the version and exit
 	if *flagVersion {
@@ -42,14 +54,14 @@ func main() {
 
 	// If we don`t get any ticket, we will just exit here.
 	if *inputStdin == false && len(tickets) == 0 {
-		log.Fatal("No JIRA-Ticket(s) found.")
+		logger.Fatal("No JIRA-Ticket(s) found.")
 	}
 
 	// TODO Add a check for required parameters
 
 	parsedURL, err := url.Parse(*jiraURL)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	session := jira.AuthAgainstJIRA(parsedURL, jiraUsername, jiraPassword)

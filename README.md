@@ -11,6 +11,7 @@ Usage of ./jitic:
   -tickets="": Message to retrieve the tickets from.
   -url="": JIRA instance URL.
   -user="": JIRA Username.
+  -verbose=false: If activated more information will be written to stdout .
   -version=false: Outputs the version number and exits.
 ```
 
