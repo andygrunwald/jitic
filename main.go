@@ -57,6 +57,11 @@ func main() {
 	}
 
 	// TODO Add a check for required parameters
+	// Required params are:
+	//	* jiraURL
+	//	* jiraUsername
+	//	* jiraPassword
+	//	* ticketMessage or inputStdin
 
 	jiraInstance, err := jira.NewJIRAInstance(*jiraURL, *jiraUsername, *jiraPassword)
 	if err != nil {
