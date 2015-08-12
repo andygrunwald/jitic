@@ -51,7 +51,9 @@ func (j *JIRA) GetTicket(ticketKey string) (*Ticket, error) {
 			return nil, fmt.Errorf("Parsing of error information (during a ticket request) failed. %s", err)
 		}
 
-		return nil, fmt.Errorf("%s", strings.Join(errors.ErrorMessages, " | "))
+		// Add Ticket-Key at first item in the slice
+		listOfErrors := append([]string{ticketKey}, errors.ErrorMessages...)
+		return nil, fmt.Errorf("%s", strings.Join(listOfErrors, " | "))
 	}
 
 	var ticket Ticket
