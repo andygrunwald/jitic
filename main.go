@@ -27,7 +27,7 @@ func main() {
 		jiraUsername  = flag.String("user", "", "JIRA Username.")
 		jiraPassword  = flag.String("pass", "", "JIRA Password.")
 		ticketMessage = flag.String("tickets", "", "Message to retrieve the tickets from.")
-		inputStdin    = flag.Bool("stdin", false, "Set to true if you want to get \"-tickets\" from stdin instead of an argument.")
+		inputStdin    = flag.Bool("stdin", false, "If set to true you can stream \"-tickets\" to stdin instead of an argument. If set \"-tickets\" will be ignored.")
 		flagVersion   = flag.Bool("version", false, "Outputs the version number and exits.")
 		flagVerbose   = flag.Bool("verbose", false, "If activated more information will be written to stdout .")
 	)
