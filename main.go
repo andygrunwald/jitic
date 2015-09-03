@@ -76,23 +76,29 @@ func main() {
 		}
 	}
 
+	// If the tickets will be applied by argument
 	if *inputStdin == false {
 		ticketLoop(tickets, jiraInstance)
 	}
 
+	// If the tickets will be applied by stdin
 	if *inputStdin {
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			tickets := getTicketsOutOfMessage(scanner.Text())
-			// If no ticket can be found
-			if len(tickets) == 0 {
-				logger.Fatal("No JIRA-Ticket(s) found.")
-			}
-			ticketLoop(tickets, jiraInstance)
-		}
+		readTicketsFromStdin(jiraInstance)
 	}
 
 	os.Exit(0)
+}
+
+func readTicketsFromStdin(jiraInstance *jira.Client) {
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		tickets := getTicketsOutOfMessage(scanner.Text())
+		// If no ticket can be found
+		if len(tickets) == 0 {
+			logger.Fatal("No JIRA-Ticket(s) found.")
+		}
+		ticketLoop(tickets, jiraInstance)
+	}
 }
 
 func ticketLoop(tickets []string, jiraInstance *jira.Client) {
