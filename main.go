@@ -104,19 +104,12 @@ func ReadIssuesFromStdin(jiraInstance *jira.Client) {
 // IssueLoop will loop over issues and request jiraInstance to check if the issue exists.
 func IssueLoop(issues []string, jiraInstance *jira.Client) {
 	for _, incomingIssue := range issues {
-		/*
-			TODO
-			// Add Ticket-Key at first item in the slice
-			if len(ticketKey) > 0 {
-				listOfErrors = append([]string{ticketKey}, listOfErrors...)
-			}
-		*/
-		issue, _, err := jiraInstance.Issue.Get(incomingIssue)
-		if err != nil {
-			logger.Fatal(err)
+		issue, response, err := jiraInstance.Issue.Get(incomingIssue)
+		if c := response.StatusCode; err != nil || (c < 200 && c > 299) {
+			logger.Fatalf("Issue %s: %s", incomingIssue, response.Status)
 		}
 		if incomingIssue != issue.Key {
-			log.Fatalf("Used issue %s is not the same as %s (provided by JIRA)", incomingIssue, issue.Key)
+			logger.Fatalf("Issue %s is not the same as %s (provided by JIRA)", incomingIssue, issue.Key)
 		}
 	}
 }
