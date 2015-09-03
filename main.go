@@ -44,6 +44,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	// If we don`t get a JIRA instance, exit
+	if len(*jiraURL) <= 0 {
+		logger.Fatal("No JIRA Instance provided. Please set the URL of the JIRA instance by -url parameter.")
+	}
+
 	// Collect all ticket keys
 	var tickets []string
 	if len(*ticketMessage) > 0 {
@@ -54,13 +59,6 @@ func main() {
 	if *inputStdin == false && len(tickets) == 0 {
 		logger.Fatal("No JIRA-Ticket(s) found.")
 	}
-
-	// TODO Add a check for required parameters
-	// Required params are:
-	//	* jiraURL
-	//	* jiraUsername
-	//	* jiraPassword
-	//	* ticketMessage or inputStdin
 
 	// Get the JIRA client
 	jiraInstance, err := jira.NewClient(nil, *jiraURL)
