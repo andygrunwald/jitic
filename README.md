@@ -4,6 +4,8 @@
 
 *jitic* - the **JI**RA **Ti**cket **C**hecker - checks the existence of one or more issues in the [JIRA](https://www.atlassian.com/software/jira) issue tracker. If the issue exists we will shutdown with exit code 0. Otherwise with 1.
 
+![jitic - the JIRA Ticket Checker](./img/jitic.png "jitic - the JIRA Ticket Checker")
+
 1. [Usage](#usage)
 	1. 	[Examples](#examples)
 2. [Use cases](#use-cases)
