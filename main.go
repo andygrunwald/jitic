@@ -41,7 +41,7 @@ func main() {
 	// Output the version and exit
 	if *flagVersion {
 		fmt.Printf("jitic v%s\n", Version)
-		return
+		os.Exit(0)
 	}
 
 	// Collect all ticket keys
