@@ -1,4 +1,4 @@
-# jitic
+# jitic - JIRA Ticket Checker
 
 [![Build Status](https://travis-ci.org/andygrunwald/jitic.svg?branch=master)](https://travis-ci.org/andygrunwald/jitic)
 
