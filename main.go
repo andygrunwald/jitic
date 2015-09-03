@@ -22,13 +22,13 @@ var (
 
 func main() {
 	var (
-		jiraURL       = flag.String("url", "", "JIRA instance URL (format: scheme://[username[:password]@]host[:port]/).")
-		jiraUsername  = flag.String("user", "", "JIRA Username.")
-		jiraPassword  = flag.String("pass", "", "JIRA Password.")
-		ticketMessage = flag.String("tickets", "", "Message to retrieve the tickets from.")
-		inputStdin    = flag.Bool("stdin", false, "If set to true you can stream \"-tickets\" to stdin instead of an argument. If set \"-tickets\" will be ignored.")
-		flagVersion   = flag.Bool("version", false, "Outputs the version number and exits.")
-		flagVerbose   = flag.Bool("verbose", false, "If activated more information will be written to stdout .")
+		jiraURL      = flag.String("url", "", "JIRA instance URL (format: scheme://[username[:password]@]host[:port]/).")
+		jiraUsername = flag.String("user", "", "JIRA Username.")
+		jiraPassword = flag.String("pass", "", "JIRA Password.")
+		issueMessage = flag.String("issues", "", "Message to retrieve the issues from.")
+		inputStdin   = flag.Bool("stdin", false, "If set to true you can stream \"-issues\" to stdin instead of an argument. If set \"-issues\" will be ignored.")
+		flagVersion  = flag.Bool("version", false, "Outputs the version number and exits.")
+		flagVerbose  = flag.Bool("verbose", false, "If activated more information will be written to stdout .")
 	)
 	flag.Parse()
 
@@ -49,15 +49,15 @@ func main() {
 		logger.Fatal("No JIRA Instance provided. Please set the URL of the JIRA instance by -url parameter.")
 	}
 
-	// Collect all ticket keys
-	var tickets []string
-	if len(*ticketMessage) > 0 {
-		tickets = getTicketsOutOfMessage(*ticketMessage)
+	// Collect all issue keys
+	var issues []string
+	if len(*issueMessage) > 0 {
+		issues = GetIssuesOutOfMessage(*issueMessage)
 	}
 
-	// If we don`t get any ticket, we will just exit here.
-	if *inputStdin == false && len(tickets) == 0 {
-		logger.Fatal("No JIRA-Ticket(s) found.")
+	// If we don`t get any issue, we will just exit here.
+	if *inputStdin == false && len(issues) == 0 {
+		logger.Fatal("No JIRA-Issue(s) found.")
 	}
 
 	// Get the JIRA client
@@ -74,50 +74,51 @@ func main() {
 		}
 	}
 
-	// If the tickets will be applied by argument
+	// If the issues will be applied by argument
 	if *inputStdin == false {
-		ticketLoop(tickets, jiraInstance)
+		IssueLoop(issues, jiraInstance)
 	}
 
-	// If the tickets will be applied by stdin
+	// If the issues will be applied by stdin
 	if *inputStdin {
-		readTicketsFromStdin(jiraInstance)
+		ReadIssuesFromStdin(jiraInstance)
 	}
 
 	os.Exit(0)
 }
 
-func readTicketsFromStdin(jiraInstance *jira.Client) {
+func ReadIssuesFromStdin(jiraInstance *jira.Client) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		tickets := getTicketsOutOfMessage(scanner.Text())
-		// If no ticket can be found
-		if len(tickets) == 0 {
-			logger.Fatal("No JIRA-Ticket(s) found.")
+		issues := GetIssuesOutOfMessage(scanner.Text())
+		// If no issue can be found
+		if len(issues) == 0 {
+			logger.Fatal("No JIRA-Issue(s) found.")
 		}
-		ticketLoop(tickets, jiraInstance)
+		IssueLoop(issues, jiraInstance)
 	}
 }
 
-func ticketLoop(tickets []string, jiraInstance *jira.Client) {
-	for _, ticket := range tickets {
+func IssueLoop(issues []string, jiraInstance *jira.Client) {
+	for _, incomingIssue := range issues {
 		/*
+			TODO
 			// Add Ticket-Key at first item in the slice
 			if len(ticketKey) > 0 {
 				listOfErrors = append([]string{ticketKey}, listOfErrors...)
 			}
 		*/
-		issue, _, err := jiraInstance.Issue.Get(ticket)
+		issue, _, err := jiraInstance.Issue.Get(incomingIssue)
 		if err != nil {
 			logger.Fatal(err)
 		}
-		if ticket != issue.Key {
-			log.Fatalf("Used issue %s is not the same as %s (provided by JIRA)", ticket, issue.Key)
+		if incomingIssue != issue.Key {
+			log.Fatalf("Used issue %s is not the same as %s (provided by JIRA)", incomingIssue, issue.Key)
 		}
 	}
 }
 
-// getTicketsOutOfMessage will retrieve all JIRA ticket numbers out of a text.
+// GetIssuesOutOfMessage will retrieve all JIRA issue keys out of a text.
 // A text can be everything, but a use case is e.g. a commit message.
 // Example:
 //		Text: WEB-22861 remove authentication prod build for now
@@ -128,10 +129,10 @@ func ticketLoop(tickets []string, jiraInstance *jira.Client) {
 //
 // @link https://confluence.atlassian.com/display/STASHKB/Integrating+with+custom+JIRA+issue+key
 // @link https://answers.atlassian.com/questions/325865/regex-pattern-to-match-jira-issue-key
-func getTicketsOutOfMessage(ticketMessage string) []string {
+func GetIssuesOutOfMessage(issueMessage string) []string {
 	// Normally i would use
 	//		((?<!([A-Z]{1,10})-?)[A-Z]+-\d+)
 	// See http://stackoverflow.com/questions/26771592/negative-look-ahead-go-regular-expressions
 	re := regexp.MustCompile("([A-Z]+-\\d+)")
-	return re.FindAllString(ticketMessage, -1)
+	return re.FindAllString(issueMessage, -1)
 }
