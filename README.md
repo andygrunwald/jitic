@@ -80,7 +80,7 @@ JIRA_PASSWORD="SECRET-PASSWORD"
 set -e
 
 # Auth against JIRA and check if the issue(s) exists
-$JITIC -url="$JIRA_URL" -user="$JIRA_USERNAME" -pass="$JIRA_PASSWORD" -tickets="$COMMIT_MSG"
+$JITIC -url="$JIRA_URL" -user="$JIRA_USERNAME" -pass="$JIRA_PASSWORD" -issues="$COMMIT_MSG"
 
 # All checks passed, so allow the commit.
 exit 0
@@ -144,7 +144,7 @@ validate_ref()
 			while read REVISION ; do
 				COMMIT_MESSAGE=$($GIT log --pretty=format:"%B" -n 1 $REVISION)
 
-				$JITIC -url="$JIRA_URL" -user="$JIRA_USERNAME" -pass="$JIRA_PASSWORD" -tickets="$COMMIT_MESSAGE"
+				$JITIC -url="$JIRA_URL" -user="$JIRA_USERNAME" -pass="$JIRA_PASSWORD" -issues="$COMMIT_MESSAGE"
 				if [ $? != 0 ]; then
 					FAIL=1
 					echo >&2 "... in revision $REVISION"
