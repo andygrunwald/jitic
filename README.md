@@ -1,6 +1,6 @@
 # jitic
 
-*jitic* - the **JI**RA **Ti**cket **C**hecker - checks the existence of one or more ticket in the [JIRA](https://www.atlassian.com/software/jira) issue tracker. If the tickets exists we will shutdown with exit code 0. Otherwise with 1.
+*jitic* - the **JI**RA **Ti**cket **C**hecker - checks the existence of one or more issues in the [JIRA](https://www.atlassian.com/software/jira) issue tracker. If the issue exists we will shutdown with exit code 0. Otherwise with 1.
 
 1. [Usage](#usage)
 	1. 	[Examples](#examples)
@@ -77,7 +77,7 @@ JIRA_PASSWORD="SECRET-PASSWORD"
 # Exit on all errors.
 set -e
 
-# Auth against JIRA and check if the ticket(s) exists
+# Auth against JIRA and check if the issue(s) exists
 $JITIC -url="$JIRA_URL" -user="$JIRA_USERNAME" -pass="$JIRA_PASSWORD" -tickets="$COMMIT_MSG"
 
 # All checks passed, so allow the commit.
