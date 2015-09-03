@@ -62,14 +62,18 @@ func main() {
 	//	* jiraPassword
 	//	* ticketMessage or inputStdin
 
+	// Get the JIRA client
 	jiraInstance, err := jira.NewClient(nil, *jiraURL)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	ok, err := jiraInstance.Authentication.AcquireSessionCookie(*jiraUsername, *jiraPassword)
-	if ok == false || err != nil {
-		logger.Fatal(err)
+	// Only provide authentification if a username and password was applied
+	if len(*jiraUsername) > 0 && len(*jiraPassword) > 0 {
+		ok, err := jiraInstance.Authentication.AcquireSessionCookie(*jiraUsername, *jiraPassword)
+		if ok == false || err != nil {
+			logger.Fatal(err)
+		}
 	}
 
 	if *inputStdin == false {
