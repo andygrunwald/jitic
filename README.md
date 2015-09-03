@@ -13,13 +13,20 @@
 
 ```
 Usage of ./jitic:
-  -pass="": JIRA Password.
-  -stdin=false: If set to true you can stream "-tickets" to stdin instead of an argument. If set "-tickets" will be ignored.
-  -tickets="": Message to retrieve the tickets from.
-  -url="": JIRA instance URL (format: scheme://[username[:password]@]host[:port]/).
-  -user="": JIRA Username.
-  -verbose=false: If activated more information will be written to stdout .
-  -version=false: Outputs the version number and exits.
+  -issues string
+    	Message to retrieve the issues from.
+  -pass string
+    	JIRA Password.
+  -stdin
+    	If set to true you can stream "-issues" to stdin instead of an argument. If set "-issues" will be ignored.
+  -url string
+    	JIRA instance URL (format: scheme://[username[:password]@]host[:port]/).
+  -user string
+    	JIRA Username.
+  -verbose
+    	If activated more information will be written to stdout .
+  -version
+    	Outputs the version number and exits.
 ```
 
 ### Examples
