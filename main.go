@@ -87,6 +87,8 @@ func main() {
 	os.Exit(0)
 }
 
+// ReadIssuesFromStdin will read content vom standard input and search for JIRA issue keys
+// If an issue key was found a check with the incoming jiraInstance will be done.
 func ReadIssuesFromStdin(jiraInstance *jira.Client) {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
@@ -99,6 +101,7 @@ func ReadIssuesFromStdin(jiraInstance *jira.Client) {
 	}
 }
 
+// IssueLoop will loop over issues and request jiraInstance to check if the issue exists.
 func IssueLoop(issues []string, jiraInstance *jira.Client) {
 	for _, incomingIssue := range issues {
 		/*
