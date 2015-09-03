@@ -31,16 +31,25 @@ Usage of ./jitic:
 
 ### Examples
 
-Check if ticket *WEB-22861* exists in *https://jira.example.org/* from parameter.
+Check if issue [MESOS-3136](https://issues.apache.org/jira/browse/MESOS-3136) exists in [https://issues.apache.org/jira/](https://issues.apache.org/jira/) from parameter:
 
 ```bash
-./jitic -url="https://jira.example.org/" -user="JIRA-API" -pass="SECRET-PASSWORD" -tickets="WEB-22861 remove authentication prod build for now"
+$ ./jitic -url="https://issues.apache.org/jira/" -issues="MESOS-3136 - Fix command health check" && echo "Exit code: $?"
+Exit code: 0
 ```
 
-Check if ticket *WEB-22861* exists in *https://jira.example.org/* from stdin.
+Check if issue [MESOS-3136](https://issues.apache.org/jira/browse/MESOS-3136) exists in [https://issues.apache.org/jira/](https://issues.apache.org/jira/) from stdin.
 
 ```bash
-echo "WEB-22861 remove authentication prod build for now" | ./jitic -url="https://jira.example.org/" -user="JIRA-API" -pass="SECRET-PASSWORD" -stdin
+$ echo "MESOS-3136 - Fix command health check" | ./jitic -url="https://issues.apache.org/jira/" -stdin && echo "Exit code: $?"
+Exit code: 0
+```
+
+Check if a fake issue MESOS-123456 exists in [https://issues.apache.org/jira/](https://issues.apache.org/jira/) from parameter:
+
+```bash
+$ ./jitic -url="https://issues.apache.org/jira/" -issues="MESOS-123456 - Not existing issue" -verbose
+2015/09/03 16:25:33 Issue MESOS-123456: 404 Not Found
 ```
 
 ## Use cases
