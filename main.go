@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/andygrunwald/jitic/jira"
+	"github.com/andygrunwald/go-jira"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,9 +12,8 @@ import (
 )
 
 const (
-	majorVersion = 0
-	minorVersion = 1
-	patchVersion = 0
+	// Version of jitic
+	Version = "0.1.0"
 )
 
 var (
@@ -41,7 +40,7 @@ func main() {
 
 	// Output the version and exit
 	if *flagVersion {
-		fmt.Printf("jitic v%d.%d.%d\n", majorVersion, minorVersion, patchVersion)
+		fmt.Printf("jitic v%s\n", Version)
 		return
 	}
 
@@ -63,12 +62,12 @@ func main() {
 	//	* jiraPassword
 	//	* ticketMessage or inputStdin
 
-	jiraInstance, err := jira.NewJIRAInstance(*jiraURL, *jiraUsername, *jiraPassword)
+	jiraInstance, err := jira.NewClient(nil, *jiraURL)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	ok, err := jiraInstance.Authenticate()
+	ok, err := jiraInstance.Authentication.AcquireSessionCookie(*jiraUsername, *jiraPassword)
 	if ok == false || err != nil {
 		logger.Fatal(err)
 	}
@@ -92,11 +91,20 @@ func main() {
 	os.Exit(0)
 }
 
-func ticketLoop(tickets []string, jiraInstance *jira.JIRA) {
+func ticketLoop(tickets []string, jiraInstance *jira.Client) {
 	for _, ticket := range tickets {
-		_, err := jiraInstance.GetTicket(ticket)
+		/*
+			// Add Ticket-Key at first item in the slice
+			if len(ticketKey) > 0 {
+				listOfErrors = append([]string{ticketKey}, listOfErrors...)
+			}
+		*/
+		issue, _, err := jiraInstance.Issue.Get(ticket)
 		if err != nil {
 			logger.Fatal(err)
+		}
+		if ticket != issue.Key {
+			log.Fatalf("Used issue %s is not the same as %s (provided by JIRA)", ticket, issue.Key)
 		}
 	}
 }
