@@ -129,6 +129,16 @@ func GetIssuesOutOfMessage(issueMessage string) []string {
 	// Normally i would use
 	//		((?<!([A-Z]{1,10})-?)[A-Z]+-\d+)
 	// See http://stackoverflow.com/questions/26771592/negative-look-ahead-go-regular-expressions
-	re := regexp.MustCompile("([A-Z]+-\\d+)")
-	return re.FindAllString(issueMessage, -1)
+	var issues []string
+	re := regexp.MustCompile("([A-Z]+)-(\\d+)")
+
+	parts := re.FindAllStringSubmatch(issueMessage, -1)
+	for _, v := range parts {
+		// If the issue number > 0 (to avoid matches for PSR-0)
+		if v[2] > "0" {
+			issues = append(issues, v[0])
+		}
+	}
+
+	return issues
 }

@@ -13,6 +13,7 @@ func TestGetIssuesOutOfMessage(t *testing.T) {
 		{"WEB-22861 remove authentication prod build for now", []string{"WEB-22861"}},
 		{"[WEB-22861] remove authentication prod build for now", []string{"WEB-22861"}},
 		{"WEB-4711 SYS-1234 PRD-5678 remove authentication prod build for now", []string{"WEB-4711", "SYS-1234", "PRD-5678"}},
+		{"[SCC-27] Replace deprecated autoloader strategy PSR-0 with PSR-4", []string{"SCC-27", "PSR-4"}},
 		{"TASKLESS: Removes duplicated comment code.", nil},
 	}
 
