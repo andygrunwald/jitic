@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/andygrunwald/go-jira"
 	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
+
+	"gopkg.in/andygrunwald/go-jira.v1"
 )
 
 const (
@@ -104,7 +105,7 @@ func ReadIssuesFromStdin(jiraInstance *jira.Client) {
 // IssueLoop will loop over issues and request jiraInstance to check if the issue exists.
 func IssueLoop(issues []string, jiraInstance *jira.Client) {
 	for _, incomingIssue := range issues {
-		issue, response, err := jiraInstance.Issue.Get(incomingIssue)
+		issue, response, err := jiraInstance.Issue.Get(incomingIssue, nil)
 		if c := response.StatusCode; err != nil || (c < 200 && c > 299) {
 			logger.Fatalf("Issue %s: %s", incomingIssue, response.Status)
 		}
