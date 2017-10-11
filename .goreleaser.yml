@@ -1,0 +1,49 @@
+project_name: jitic
+release:
+  github:
+    owner: andygrunwald
+    name: jitic
+builds:
+- goos:
+  - linux
+  - darwin
+  - freebsd
+  - windows
+  goarch:
+  - amd64
+  - 386
+  ignore:
+    - goos: darwin
+      goarch: 386
+  env:
+  - CGO_ENABLED=0
+  main: .
+  ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+  binary: jitic
+archive:
+  format: tar.gz
+  name_template: '{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+  wrap_in_directory: true
+  replacements:
+    386: i386
+    amd64: x86_64
+    linux: Linux
+    windows: Windows
+    darwin: Darwin
+    freebsd: FreeBSD
+  format_overrides:
+    - goos: windows
+      format: zip
+  files:
+  - licence*
+  - LICENCE*
+  - license*
+  - LICENSE*
+  - readme*
+  - README*
+  - changelog*
+  - CHANGELOG*
+snapshot:
+  name_template: SNAPSHOT-{{ .Commit }}
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.txt'
