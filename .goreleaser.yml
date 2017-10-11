@@ -1,8 +1,4 @@
 project_name: jitic
-release:
-  github:
-    owner: andygrunwald
-    name: jitic
 builds:
 - goos:
   - linux
