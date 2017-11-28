@@ -38,14 +38,14 @@ Usage of ./jitic:
 Check if issue [MESOS-3136](https://issues.apache.org/jira/browse/MESOS-3136) exists in [https://issues.apache.org/jira/](https://issues.apache.org/jira/) from parameter:
 
 ```bash
-$ ./jitic -url="https://issues.apache.org/jira/" -issues="MESOS-3136 - Fix command health check" && echo "Exit code: $?"
+$ ./jitic -url="https://issues.apache.org/jira/" -issues="MESOS-3136 - Fix command health check"; echo "Exit code: $?"
 Exit code: 0
 ```
 
 Check if issue [MESOS-3136](https://issues.apache.org/jira/browse/MESOS-3136) exists in [https://issues.apache.org/jira/](https://issues.apache.org/jira/) from stdin.
 
 ```bash
-$ echo "MESOS-3136 - Fix command health check" | ./jitic -url="https://issues.apache.org/jira/" -stdin && echo "Exit code: $?"
+$ echo "MESOS-3136 - Fix command health check" | ./jitic -url="https://issues.apache.org/jira/" -stdin; echo "Exit code: $?"
 Exit code: 0
 ```
 
