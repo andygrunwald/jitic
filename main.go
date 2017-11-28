@@ -8,17 +8,14 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 
 	"gopkg.in/andygrunwald/go-jira.v1"
 )
 
 const (
-	// Version of jitic
-	Version = "0.2.2"
-)
-
-var (
-	logger *log.Logger
+	// Version reflects the version of jitic
+	Version = "1.0.0"
 )
 
 func main() {
@@ -33,90 +30,51 @@ func main() {
 	)
 	flag.Parse()
 
-	// Set logger (throw messages away)
-	logger = log.New(ioutil.Discard, "", log.LstdFlags)
+	// Set logger (throw messages away).
+	// In a verbose mode we output the messages to stdout
+	logger := log.New(ioutil.Discard, "", log.LstdFlags)
 	if *flagVerbose {
 		logger = log.New(os.Stdout, "", log.LstdFlags)
 	}
 
-	// Output the version and exit
+	// Output the version, exit
 	if *flagVersion {
 		fmt.Printf("jitic v%s\n", Version)
 		os.Exit(0)
 	}
 
-	// If we don`t get a JIRA instance, exit
+	// If we don`t have a JIRA instance URL, exit
 	if len(*jiraURL) <= 0 {
 		logger.Fatal("No JIRA Instance provided. Please set the URL of the JIRA instance by -url parameter.")
 	}
 
-	// Collect all issue keys
-	var issues []string
-	if len(*issueMessage) > 0 {
-		issues = GetIssuesOutOfMessage(*issueMessage)
+	issueText := getTextToAnalyze(*issueMessage, *inputStdin)
+	issues := getIssuesOutOfMessage(issueText)
+
+	// If we don`t get any issues, exit
+	if len(issues) == 0 {
+		logger.Fatalf("No JIRA-Issue(s) found in text '%s'.", issueText)
 	}
 
-	// If we don`t get any issue, we will just exit here.
-	if *inputStdin == false && len(issues) == 0 {
-		logger.Fatal("No JIRA-Issue(s) found.")
-	}
-
-	// Get the JIRA client
-	jiraInstance, err := jira.NewClient(nil, *jiraURL)
+	jiraClient, err := getJIRAClient(*jiraURL, *jiraUsername, *jiraPassword)
 	if err != nil {
-		logger.Fatalf("JIRA client can`t be initialized: %s", err)
+		logger.Fatal(err)
 	}
 
-	// Only provide authentification if a username and password was applied
-	if len(*jiraUsername) > 0 && len(*jiraPassword) > 0 {
-		ok, err := jiraInstance.Authentication.AcquireSessionCookie(*jiraUsername, *jiraPassword)
-		if ok == false || err != nil {
-			logger.Fatalf("jitic can`t authentificate user %s against the JIRA instance %s: %s", *jiraUsername, *jiraURL, err)
+	// Loop over all issues and check if they are correct / valid
+	for _, issueFromUser := range issues {
+		err := checkIfIssue(issueFromUser, jiraClient)
+		if err != nil {
+			logger.Fatal(err)
 		}
-	}
-
-	// If the issues will be applied by argument
-	if *inputStdin == false {
-		IssueLoop(issues, jiraInstance)
-	}
-
-	// If the issues will be applied by stdin
-	if *inputStdin {
-		ReadIssuesFromStdin(jiraInstance)
 	}
 
 	os.Exit(0)
 }
 
-// ReadIssuesFromStdin will read content vom standard input and search for JIRA issue keys
-// If an issue key was found a check with the incoming jiraInstance will be done.
-func ReadIssuesFromStdin(jiraInstance *jira.Client) {
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		issues := GetIssuesOutOfMessage(scanner.Text())
-		// If no issue can be found
-		if len(issues) == 0 {
-			logger.Fatal("No JIRA-Issue(s) found.")
-		}
-		IssueLoop(issues, jiraInstance)
-	}
-}
-
-// IssueLoop will loop over issues and request jiraInstance to check if the issue exists.
-func IssueLoop(issues []string, jiraInstance *jira.Client) {
-	for _, incomingIssue := range issues {
-		issue, response, err := jiraInstance.Issue.Get(incomingIssue, nil)
-		if c := response.StatusCode; err != nil || (c < 200 && c > 299) {
-			logger.Fatalf("Issue %s: %s", incomingIssue, response.Status)
-		}
-		if incomingIssue != issue.Key {
-			logger.Fatalf("Issue %s is not the same as %s (provided by JIRA)", incomingIssue, issue.Key)
-		}
-	}
-}
-
-// GetIssuesOutOfMessage will retrieve all JIRA issue keys out of a text.
+// getIssuesOutOfMessage will retrieve all JIRA issue keys out of a text.
 // A text can be everything, but a use case is e.g. a commit message.
+//
 // Example:
 //		Text: WEB-22861 remove authentication prod build for now
 //		Result: WEB-22861
@@ -126,14 +84,11 @@ func IssueLoop(issues []string, jiraInstance *jira.Client) {
 //
 // @link https://confluence.atlassian.com/display/STASHKB/Integrating+with+custom+JIRA+issue+key
 // @link https://answers.atlassian.com/questions/325865/regex-pattern-to-match-jira-issue-key
-func GetIssuesOutOfMessage(issueMessage string) []string {
-	// Normally i would use
-	//		((?<!([A-Z]{1,10})-?)[A-Z]+-\d+)
-	// See http://stackoverflow.com/questions/26771592/negative-look-ahead-go-regular-expressions
+func getIssuesOutOfMessage(message string) []string {
 	var issues []string
 	re := regexp.MustCompile("(?i)([A-Z]+)-(\\d+)")
 
-	parts := re.FindAllStringSubmatch(issueMessage, -1)
+	parts := re.FindAllStringSubmatch(message, -1)
 	for _, v := range parts {
 		// If the issue number > 0 (to avoid matches for PSR-0)
 		if v[2] > "0" {
@@ -142,4 +97,69 @@ func GetIssuesOutOfMessage(issueMessage string) []string {
 	}
 
 	return issues
+}
+
+// checkIfIssue checks if issue exists in the JIRA instance.
+// If not an error will be returned.
+func checkIfIssue(issue string, jiraClient *jira.Client) error {
+	JIRAIssue, resp, err := jiraClient.Issue.Get(issue, nil)
+	if c := resp.StatusCode; err != nil || (c < 200 || c > 299) {
+		return fmt.Errorf("JIRA Request for issue %s returned %s (%d)", issue, resp.Status, resp.StatusCode)
+	}
+
+	// Make issues uppercase to be able to compare Web-1234 with WEB-1234
+	upperIssue := strings.ToUpper(issue)
+	upperJIRAIssue := strings.ToUpper(JIRAIssue.Key)
+	if upperIssue != upperJIRAIssue {
+		return fmt.Errorf("Issue %s is not the same as %s (provided by JIRA)", upperIssue, upperJIRAIssue)
+	}
+
+	return nil
+}
+
+// getJIRAClient will return a valid JIRA api client.
+func getJIRAClient(instanceURL, username, password string) (*jira.Client, error) {
+	client, err := jira.NewClient(nil, instanceURL)
+	if err != nil {
+		return nil, fmt.Errorf("JIRA client can`t be initialized: %s", err)
+	}
+
+	// Only provide authentification if a username and password was applied
+	if len(username) > 0 && len(password) > 0 {
+		ok, err := client.Authentication.AcquireSessionCookie(username, password)
+		if ok == false || err != nil {
+			return nil, fmt.Errorf("jitic can`t authentificate user %s against the JIRA instance %s: %s", username, instanceURL, err)
+		}
+	}
+
+	return client, nil
+}
+
+// readStdin will read content from stdin and return the content.
+func readStdin() string {
+	var text string
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		text += scanner.Text()
+	}
+
+	return text
+}
+
+// getTextToAnalyze will return the text jitic should analyze.
+// From command line argument or/and stdin
+func getTextToAnalyze(argText string, inputStdin bool) string {
+	var text string
+
+	// We get a message via cmd argument
+	if len(argText) > 0 {
+		text = argText
+	}
+
+	// If stdin is activated
+	if inputStdin {
+		text += readStdin()
+	}
+
+	return text
 }

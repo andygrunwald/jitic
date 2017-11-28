@@ -1,9 +1,58 @@
 package main
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 )
+
+var (
+	// mux is the HTTP request multiplexer used with the test server.
+	mux *http.ServeMux
+
+	// server is a test HTTP server used to provide mock API responses.
+	server *httptest.Server
+)
+
+// setup sets up a test HTTP server along with a github.Client that is
+// configured to talk to that test server. Tests should register handlers on
+// mux which provide mock responses for the API method being tested.
+func setup() {
+	// test server
+	mux = http.NewServeMux()
+
+	// We want to ensure that tests catch mistakes where the endpoint URL is
+	// specified as absolute rather than relative. It only makes a difference
+	// when there's a non-empty base URL path. So, use that. See issue #752.
+	apiHandler := http.NewServeMux()
+
+	server = httptest.NewServer(apiHandler)
+}
+
+// teardown closes the test HTTP server.
+func teardown() {
+	server.Close()
+}
+
+func TestGetJIRAClient_IssueNotExists(t *testing.T) {
+	setup()
+	defer teardown()
+
+	c, err := getJIRAClient(server.URL, "", "")
+	if err != nil {
+		t.Errorf("Failed to create a JIRA client: %s", err)
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+
+	err = checkIfIssue("WEB-1234", c)
+	if err == nil {
+		t.Error("No error occuered. Expected a 404")
+	}
+}
 
 func TestGetIssuesOutOfMessage(t *testing.T) {
 	dataProvider := []struct {
@@ -16,12 +65,33 @@ func TestGetIssuesOutOfMessage(t *testing.T) {
 		{"[SCC-27] Replace deprecated autoloader strategy PSR-0 with PSR-4", []string{"SCC-27", "PSR-4"}},
 		{"WeB-4711 sys-1234 PRD-5678 remove authentication prod build for now", []string{"WeB-4711", "sys-1234", "PRD-5678"}},
 		{"TASKLESS: Removes duplicated comment code.", nil},
+		{"This is a commit message and we applied the PHP standard PSR-0 to the codebase", nil},
 	}
 
 	for _, data := range dataProvider {
-		res := GetIssuesOutOfMessage(data.Message)
+		res := getIssuesOutOfMessage(data.Message)
 		if reflect.DeepEqual(data.Result, res) == false {
 			t.Errorf("Test failed, expected: '%+v' (%d), got: '%+v' (%d)", data.Result, len(data.Result), res, len(res))
+		}
+	}
+}
+
+func TestGetTextToAnalyze(t *testing.T) {
+	dataProvider := []struct {
+		Message string
+		Stdin   bool
+		Result  string
+	}{
+		{"", false, ""},
+		{"From arguments without stdin", false, "From arguments without stdin"},
+		{"From arguments with stdin", true, "From arguments with stdin"},
+		// TODO: Test stdin
+	}
+
+	for _, data := range dataProvider {
+		text := getTextToAnalyze(data.Message, data.Stdin)
+		if text != data.Result {
+			t.Errorf("Test failed, expected: '%+v', got: '%+v'", data.Result, text)
 		}
 	}
 }

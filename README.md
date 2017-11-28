@@ -18,19 +18,19 @@
 ```
 Usage of ./jitic:
   -issues string
-    	Message to retrieve the issues from.
+        Message to retrieve the issues from.
   -pass string
-    	JIRA Password.
+        JIRA Password.
   -stdin
-    	If set to true you can stream "-issues" to stdin instead of an argument. If set "-issues" will be ignored.
+        If set to true you can stream "-issues" to stdin instead of an argument. If set "-issues" will be ignored.
   -url string
-    	JIRA instance URL (format: scheme://[username[:password]@]host[:port]/).
+        JIRA instance URL (format: scheme://[username[:password]@]host[:port]/).
   -user string
-    	JIRA Username.
+        JIRA Username.
   -verbose
-    	If activated more information will be written to stdout .
+        If activated more information will be written to stdout .
   -version
-    	Outputs the version number and exits.
+        Outputs the version number and exits.
 ```
 
 ### Examples
@@ -52,8 +52,8 @@ Exit code: 0
 Check if a fake issue MESOS-123456 exists in [https://issues.apache.org/jira/](https://issues.apache.org/jira/) from parameter:
 
 ```bash
-$ ./jitic -url="https://issues.apache.org/jira/" -issues="MESOS-123456 - Not existing issue" -verbose
-2015/09/03 16:25:33 Issue MESOS-123456: 404 Not Found
+$ ./jitic -url="https://issues.apache.org/jira/" -issues="MESOS-123456 - Not existing issue" -verbose; echo "Exit code: $?"
+2017/11/28 15:41:26 JIRA Request for issue MESOS-123456 returned 404 Not Found (404)
 ```
 
 ## Use cases
