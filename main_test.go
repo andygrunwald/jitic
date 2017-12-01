@@ -67,6 +67,7 @@ func TestGetIssuesOutOfMessage(t *testing.T) {
 		{"WeB-4711 sys-1234 PRD-5678 remove authentication prod build for now", []string{"WEB", "SYS", "PRD"}, []string{"WeB-4711", "sys-1234", "PRD-5678"}},
 		{"TASKLESS: Removes duplicated comment code.", []string{"WEB"}, nil},
 		{"This is a commit message and we applied the PHP standard PSR-0 to the codebase", []string{"WEB"}, nil},
+		{"Merge remote-tracking branch 'origin/master' into bugfix/web-12345-fix-hotel-award-2017-on-android-7", []string{"WEB"}, []string{"web-12345"}},
 	}
 
 	for _, data := range dataProvider {
