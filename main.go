@@ -48,17 +48,25 @@ func main() {
 		logger.Fatal("No JIRA Instance provided. Please set the URL of the JIRA instance by -url parameter.")
 	}
 
+	jiraClient, err := getJIRAClient(*jiraURL, *jiraUsername, *jiraPassword)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	projects, err := getProjectsFromJIRA(jiraClient)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	if len(projects) == 0 {
+		logger.Fatal("0 projects retrieved from JIRA. Without projects, we are not able to operate.")
+	}
+
 	issueText := getTextToAnalyze(*issueMessage, *inputStdin)
-	issues := getIssuesOutOfMessage(issueText)
+	issues := getIssuesOutOfMessage(projects, issueText)
 
 	// If we don`t get any issues, exit
 	if len(issues) == 0 {
 		logger.Fatalf("No JIRA-Issue(s) found in text '%s'.", issueText)
-	}
-
-	jiraClient, err := getJIRAClient(*jiraURL, *jiraUsername, *jiraPassword)
-	if err != nil {
-		logger.Fatal(err)
 	}
 
 	// Loop over all issues and check if they are correct / valid
@@ -84,9 +92,13 @@ func main() {
 //
 // @link https://confluence.atlassian.com/display/STASHKB/Integrating+with+custom+JIRA+issue+key
 // @link https://answers.atlassian.com/questions/325865/regex-pattern-to-match-jira-issue-key
-func getIssuesOutOfMessage(message string) []string {
+func getIssuesOutOfMessage(projects []string, message string) []string {
 	var issues []string
-	re := regexp.MustCompile("(?i)([A-Z]+)-(\\d+)")
+
+	projectList := strings.Join(projects, "|")
+	expression := fmt.Sprintf("(?i)(%s)-(\\d+)", projectList)
+
+	re := regexp.MustCompile(expression)
 
 	parts := re.FindAllStringSubmatch(message, -1)
 	for _, v := range parts {
@@ -162,4 +174,18 @@ func getTextToAnalyze(argText string, inputStdin bool) string {
 	}
 
 	return text
+}
+
+func getProjectsFromJIRA(jiraClient *jira.Client) ([]string, error) {
+	list, _, err := jiraClient.Project.GetList()
+	if err != nil {
+		return []string{}, err
+	}
+
+	projects := []string{}
+	for _, p := range *list {
+		projects = append(projects, p.Key)
+	}
+
+	return projects, nil
 }
