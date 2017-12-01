@@ -30,3 +30,6 @@ jitic-v*
 
 # IDE
 .idea/
+
+# goreleaser
+dist/
