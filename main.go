@@ -71,7 +71,7 @@ func main() {
 
 	// Loop over all issues and check if they are correct / valid
 	for _, issueFromUser := range issues {
-		err := checkIfIssue(issueFromUser, jiraClient)
+		err := checkIfIssueExists(issueFromUser, jiraClient)
 		if err != nil {
 			logger.Fatal(err)
 		}
@@ -111,9 +111,9 @@ func getIssuesOutOfMessage(projects []string, message string) []string {
 	return issues
 }
 
-// checkIfIssue checks if issue exists in the JIRA instance.
+// checkIfIssueExists checks if issue exists in the JIRA instance.
 // If not an error will be returned.
-func checkIfIssue(issue string, jiraClient *jira.Client) error {
+func checkIfIssueExists(issue string, jiraClient *jira.Client) error {
 	JIRAIssue, resp, err := jiraClient.Issue.Get(issue, nil)
 	if c := resp.StatusCode; err != nil || (c < 200 || c > 299) {
 		return fmt.Errorf("JIRA Request for issue %s returned %s (%d)", issue, resp.Status, resp.StatusCode)
