@@ -35,7 +35,7 @@ func teardown() {
 	server.Close()
 }
 
-func TestGetJIRAClient_IssueNotExists(t *testing.T) {
+func TestGetJIRAClient_IssueDoesNotExist(t *testing.T) {
 	setup()
 	defer teardown()
 
@@ -48,7 +48,7 @@ func TestGetJIRAClient_IssueNotExists(t *testing.T) {
 		w.WriteHeader(http.StatusNotFound)
 	})
 
-	err = checkIfIssue("WEB-1234", c)
+	_, err = checkIfIssueExists("WEB-1234", c)
 	if err == nil {
 		t.Error("No error occuered. Expected a 404")
 	}

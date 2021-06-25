@@ -25,6 +25,7 @@ func main() {
 		jiraPassword = flag.String("pass", "", "JIRA Password.")
 		issueMessage = flag.String("issues", "", "Message to retrieve the issues from.")
 		inputStdin   = flag.Bool("stdin", false, "If set to true you can stream \"-issues\" to stdin instead of an argument. If set \"-issues\" will be ignored.")
+		checkOnlyOne = flag.Bool("one", false, "If set to true jitic will succeed as soon as one issue is found in the remote Jira instance.")
 		flagVersion  = flag.Bool("version", false, "Outputs the version number and exits.")
 		flagVerbose  = flag.Bool("verbose", false, "If activated more information will be written to stdout .")
 	)
@@ -71,10 +72,24 @@ func main() {
 
 	// Loop over all issues and check if they are correct / valid
 	for _, issueFromUser := range issues {
-		err := checkIfIssue(issueFromUser, jiraClient)
+		found, err := checkIfIssueExists(issueFromUser, jiraClient)
 		if err != nil {
-			logger.Fatal(err)
+			if *checkOnlyOne {
+				logger.Print(err)
+			} else {
+				logger.Fatal(err)
+			}
+		} else if found && *checkOnlyOne {
+			logger.Printf("Found JIRA-Issue '%s'", issueFromUser)
+			os.Exit(0)
 		}
+	}
+
+	// if we went through the whole loop with checkOnlyOne == true, then we
+	// haven't found any issue.
+	if *checkOnlyOne {
+		logger.Printf("None of these issues existed in JIRA: %v", issues)
+		os.Exit(1)
 	}
 
 	os.Exit(0)
@@ -111,22 +126,22 @@ func getIssuesOutOfMessage(projects []string, message string) []string {
 	return issues
 }
 
-// checkIfIssue checks if issue exists in the JIRA instance.
+// checkIfIssueExists checks if issue exists in the JIRA instance.
 // If not an error will be returned.
-func checkIfIssue(issue string, jiraClient *jira.Client) error {
+func checkIfIssueExists(issue string, jiraClient *jira.Client) (bool, error) {
 	JIRAIssue, resp, err := jiraClient.Issue.Get(issue, nil)
 	if c := resp.StatusCode; err != nil || (c < 200 || c > 299) {
-		return fmt.Errorf("JIRA Request for issue %s returned %s (%d)", issue, resp.Status, resp.StatusCode)
+		return false, fmt.Errorf("JIRA Request for issue %s returned %s (%d)", issue, resp.Status, resp.StatusCode)
 	}
 
 	// Make issues uppercase to be able to compare Web-1234 with WEB-1234
 	upperIssue := strings.ToUpper(issue)
 	upperJIRAIssue := strings.ToUpper(JIRAIssue.Key)
 	if upperIssue != upperJIRAIssue {
-		return fmt.Errorf("Issue %s is not the same as %s (provided by JIRA)", upperIssue, upperJIRAIssue)
+		return false, fmt.Errorf("Issue %s is not the same as %s (provided by JIRA)", upperIssue, upperJIRAIssue)
 	}
 
-	return nil
+	return true, nil
 }
 
 // getJIRAClient will return a valid JIRA api client.
